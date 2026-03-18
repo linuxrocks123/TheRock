@@ -6,8 +6,8 @@ import subprocess
 def get_output_for_cmd(cmd_str):
     return subprocess.run(cmd_str,shell=True,stdout=subprocess.PIPE).stdout
 
-def recurse_git_diff(subdir):
-    lines = map(get_output_for_cmd("git diff").readlines(),str.rstrip)
+def recurse_git_diff(diffcmd):
+    lines = map(get_output_for_cmd(diffcmd).readlines(),str.rstrip)
     i=0
     while i<len(lines):
         diff_line = lines[i]
@@ -20,7 +20,7 @@ def recurse_git_diff(subdir):
 
             sha_dirty = submodule.split(' ')[-1]
             sha_dirty_parts = sha_dirty.split('-')
-            print("pushd submodule")
+            print("pushd "+submodule)
             print("git reset --hard "+sha_dirty_parts[0])
             if len(sha_dirty_parts > 1) and sha_dirty_parts[1]=="dirty":
                 recurse_git_diff(submodule)
@@ -34,4 +34,6 @@ def recurse_git_diff(subdir):
                 i+=1
             print("DIRTY_EOF")
 
-print("git reset --hard "+get_output_for_cmd("git rev-parse HEAD").read().rstrip())
+print("git reset --hard "+get_output_for_cmd("git rev-parse HEAD~1").read().rstrip())
+recurse_git_diff("git diff")
+recurse_git_diff("git diff HEAD~1")
